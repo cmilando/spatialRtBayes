@@ -15,6 +15,8 @@ window_length <- 40 ## smoothing window for estimaiton
 si_shape <- 2 ## shape parameter for serical interval assuming gamma distribution
 si_rate <- 0.5 ## rate parameter for serical interval assuming gamma distribution
 si_t_max <- 14 ## maximum number of days with non-zero probability for serial interval
+
+## mobility matrix
 P <- matrix(c(0.8, 0.2, 0.1,  ## mobility matrix
               0.15, 0.6, 0.3,
               0.05, 0.2, 0.6), 3)

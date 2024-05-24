@@ -1,3 +1,10 @@
+*.pdf
+src/*.o
+old_data/*
+*.xlsx
+*.RDS
+.DS_store
+
 # History files
 .Rhistory
 .Rapp.history
