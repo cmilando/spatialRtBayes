@@ -55,5 +55,5 @@ ll_df <- unique(ll_df)
 # Plot the original points and the linear fit
 plot(x, y, main = "Linear Fit Using Matrix Math",
      xlab = "X", ylab = "Y", pch = 19)
-#points(ll_df$new_x, ll_df$new_y, col = "red")
-lines(ll_df$new_x, ll_df$new_y, col = "red")
+points(ll_df$new_x, ll_df$new_y, col = "red")
+#lines(ll_df$new_x, ll_df$new_y, col = "red")

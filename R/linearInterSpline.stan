@@ -9,7 +9,7 @@ data {
 }
 
 parameters {
-  real<lower=Xmin,upper=Xmax> Kx_raw[N_k]; // x values
+  real<lower=Xmin,upper=Xmax> Kx_raw[N_k - 2]; // x values
   real Ky[N_k]; // y values,
   real<lower=0.1> ysigma;
   real<lower=0.01> tau;
@@ -28,7 +28,7 @@ transformed parameters {
   Kx[1] = Xmin;
   Kx[N_k] = Xmax;
   for (i in 2:(N_k - 1))
-    Kx[i] = Kx[i-1] + Kx_raw[i] * tau;
+    Kx[i] = Kx[i-1] + Kx_raw[i - 1] * tau;
   //print("Kx = ", Kx);
   //print("Ky = ", Ky);
   
@@ -90,8 +90,10 @@ transformed parameters {
 
 model {
   
-  // priors
-  tau ~ normal(0, 1);
+  // priors with truncation
+  // https://mc-stan.org/docs/stan-users-guide/truncation-censoring.html#truncation.section
+  Kx_raw ~ normal(0, 1) T[Xmin, Xmax];;
+  tau ~ normal(0, 1) T[0,];
   Ky ~ normal(0, 1);
   ysigma ~ inv_gamma(1, 1);
   
