@@ -6,7 +6,9 @@ si_rate <- 0.5 ## rate parameter for serical interval assuming gamma distributio
 si_t_max <- 14 ## maximum number of days with non-zero probability for serial interval
 
 # Observed cases, matrix Y
-incidence_data <- read.csv("https://raw.githubusercontent.com/zwzhou-biostat/hrt/main/data/example_data.csv")
+# incidence_data <- read.csv("https://raw.githubusercontent.com/zwzhou-biostat/hrt/main/data/example_data.csv")
+# write.csv(incidence_data, "example_data.csv", row.names = F)
+incidence_data <- read.csv("example_data.csv")
 head(incidence_data)
 
 Y <- as.matrix(incidence_data)
@@ -16,6 +18,11 @@ for(i in 1:nrow(Y)) {
   }
 }
 head(Y)
+plot(x = 1:200, y = Y[1:200, 1], type = 'l', col = 'red')
+lines(x = 1:200, y = Y[1:200, 2], type = 'l', col = 'green')
+lines(x = 1:200, y = Y[1:200, 3], type = 'l', col = 'blue')
+
+
 N <- as.integer(nrow(Y))
 J <- as.integer(ncol(Y))
 #Y[1, ] <- 0  # Padding the first row as mentioned in your comments
@@ -27,21 +34,28 @@ P <- matrix(c(0.8, 0.2, 0.1,
 
 # Serial interval, vector W
 S <- as.integer(si_t_max)
+
 ## obtain discretized gamma distribution for serial interval
 W <- sapply(1:S, function(x){
   pgamma(x, si_shape, si_rate) - pgamma(x-1, si_shape, si_rate)
 })  
 
-W <- W/sum(W) 
+W <- W/sum(W)
 plot(W, type = 'l')
 
-Ra <- function(t) (20*cos(t/500) + (0.8*t - 50)^2 - (0.115 * t)^3)/1000 + 0.8 
-Rb <- function(t) (30*sin(t/150) + cos(t/20) - (t/50)^2)/8 - 0.006*t 
-Rc <- function(t) (30*cos(t/150) + 2*sin(t/20) + 2*(t/50)^2)/20 - 0.005*t
+Ra <- function(x) (20 * cos(x / 500) + ((0.8 * x - 50))^2 - (x * 0.115)^3) / 1000 + 0.8
+Rb <- function(x) (30 * sin(x / 150) + cos(x / 20) - (x / 50)^2) / 8 - x * 0.006
+Rc <- function(x) (30 * cos(x / 150) + 2 * sin(x / 20) + 2 * (x / 50)^2) / 20 - x * 0.005
+
 
 plot(x = 1:200, y = Ra(1:200), type = 'l', col = 'red')
 lines(x = 1:200, y = Rb(1:200), type = 'l', col = 'green')
 lines(x = 1:200, y = Rc(1:200), type = 'l', col = 'blue')
+
+# plot(x = 1:200, y = R_matrix[1:200,1], type = 'p', col = 'red')
+# lines(x = 1:200, y = R_matrix[1:200,2], type = 'p', col = 'green')
+# lines(x = 1:200, y = R_matrix[1:200,3], type = 'p', col = 'blue')
+
 
 ## -----------------------------------------------------------
 ## ok now get the matrices to solve for R
@@ -65,9 +79,10 @@ for(n in 2:N) {
   end_index = n - 1
   start_index
   end_index
+  
   ## sum(m*w)
   for (jx in 1:J) {
-    sum_m_w[jx] = M[start_index:end_index, jx] %*% W[1:(end_index - start_index + 1)] 
+    sum_m_w[jx] = M[end_index:start_index, jx] %*% W[1:(end_index - start_index + 1)] 
   }
   sum_m_w
   
@@ -100,3 +115,11 @@ lines(x = 1:200, y = M[1:200, 3], type = 'l', col = 'blue')
 
 head(R_rev)
 head(t(Rx))
+
+lines(x = 1:200, y = R_rev[1:200, 1], type = 'l', col = 'black')
+lines(x = 1:200, y = R_rev[1:200, 2], type = 'l', col = 'black')
+lines(x = 1:200, y = R_rev[1:200, 3], type = 'l', col = 'black')
+
+lines(x = 1:200, y = Ra(1:200), type = 'l', col = 'red')
+lines(x = 1:200, y = Rb(1:200), type = 'l', col = 'green')
+lines(x = 1:200, y = Rc(1:200), type = 'l', col = 'blue')

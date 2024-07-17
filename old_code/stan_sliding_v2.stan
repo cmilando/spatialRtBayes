@@ -45,10 +45,13 @@ transformed parameters {
     // this can be a dot_prodcut of the last t-Tau timepoints of w and m
     // for m[(n - S):(n - 1)]
     // but of course, n-tau can never be lower than 1
+    // SERIAL INTERVAL NEEDS TO BE REVERSED !!! ???
+    // Something weird here
+    int start_index = max(1, n - S + 1);
+    int end_index   = n - 1;
     for (jx in 1:J) {
-      int start_index = max(1, n - S + 1);
-      int end_index   = n - 1;
-      sum_m_w[jx] = dot_product(M[start_index:end_index, jx], 
+
+      sum_m_w[jx] = dot_product(M[end_index:start_index, jx], 
                                 W[1:(end_index - start_index + 1)]); 
     }
     
@@ -86,6 +89,7 @@ model {
       // weak prior on beta 
       //xbeta[, j] ~ normal(beta_mu, beta_sd); 
       xbeta[, j] ~ normal(0, 0.5);
+      
       // sample logR
       logR[1:N, j] ~ normal(xbeta[1:N, j], xsigma[j]);
       
@@ -118,11 +122,11 @@ model {
   // weak prior on st-dev for each state
   for(j in 1:J) {
     
-    /* -- NO WINDOW
+    // -- NO WINDOW
     for(n in 1:N) {
       Y[n, j] ~ poisson(M[n, j]);
     }
-    */
+    //
      
     /* -- BACK LOOKING --
     // for n = 1, ... Z
@@ -140,11 +144,11 @@ model {
     */
     
     // -- FORWARD LOOKING --
-    for(n in 1:N) {
-      int max_row = min(N, n + Z - 1);
+    // for(n in 1:N) {
+    //   int max_row = min(N, n + Z - 1);
       //target += poisson_lpmf(Y[n:max_row, j] | M[n, j]);
-      Y[n:max_row, j] ~ poisson(M[n, j]);
-    }
+    //  Y[n:max_row, j] ~ poisson(M[n, j]);
+    //}
     
     
   } // next J

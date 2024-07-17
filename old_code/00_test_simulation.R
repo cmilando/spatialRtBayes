@@ -86,15 +86,13 @@ stan_data <- list(
 # -------------------------------------------------------------
 # run the STAN code, takes ~ 10min
 m_hier <- stan(file="stan_sliding_v2.stan",
-             data = stan_data, 
-             control = list(max_treedepth = 30,
-                            adapt_delta = 0.99))
+             data = stan_data)
 
 # extract output
 out <- rstan::extract(m_hier)
 
 # QC
-# launch_shinystan(m_hier)
+launch_shinystan(m_hier)
 
 # -------------------------------------------------------------
 # plot timeseries
@@ -122,7 +120,7 @@ data_l <- lapply(1:3, function(i) {
   n_chains = 4
   n_iters_per_chain = 1000
   
-  sub_l <- lapply(1:nchains, function(nc_i) {
+  sub_l <- lapply(1:n_chains, function(nc_i) {
     data.frame(
       x      = 1:nrow(Y),
       y_real = Y[,i],

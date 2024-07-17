@@ -1,6 +1,8 @@
 *.pdf
 src/*.o
 old_data/*
+*.ZIP
+*.zip
 *.xlsx
 *.RDS
 .DS_store
