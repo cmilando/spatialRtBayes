@@ -6,6 +6,7 @@ old_data/*
 *.xlsx
 *.RDS
 .DS_store
+old_code/*
 
 # History files
 .Rhistory
