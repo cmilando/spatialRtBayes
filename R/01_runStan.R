@@ -21,7 +21,7 @@ beta_sd  <- 1.      ## prior sd   for Rj(t) ~ N
 sigma_shape <- 2.   ## prior for sigma_j assuming inverse gamma
 sigma_scale <- 1.   ## prior for sigma_j assuming inverse gamma
 
-source('R/00_generate_data.R')
+source('00_generate_data.R')
 
 Y <- as.matrix(N)
 for(i in 1:nrow(Y)) {
@@ -49,8 +49,8 @@ stan_data <- list(
   P = P,
   S = S,
   W = w,
-  beta_mu = beta_mu,
-  beta_sd = beta_sd,
+  #beta_mu = beta_mu,
+  #beta_sd = beta_sd,
   sigma_shape = sigma_shape, 
   sigma_scale = sigma_scale,
   Z = as.integer(window_length),
@@ -60,10 +60,10 @@ stan_data <- list(
 
 # -------------------------------------------------------------
 # run the STAN code, takes ~ 10min
-N_ITER = 1000
-N_WARMUP = 1000
+N_ITER = 4000
+N_WARMUP = 2000
 N_CHAINS = 4
-m_hier <- stan(file="stan_sliding_v4.stan",
+m_hier <- stan(file="../src/stan_sliding_v4nc1.stan",
                data = stan_data, 
                chains = N_CHAINS,
                warmup = N_WARMUP,

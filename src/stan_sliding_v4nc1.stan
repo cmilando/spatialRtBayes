@@ -7,8 +7,8 @@ data {
   matrix[N*J,J] P;         // transfer matrix, changes with time
   int<lower=1> S;          // length of serial interval
   vector[S] W;             // serial interval
-  real beta_mu;            // prior mu for beta
-  real beta_sd;            // prior sd for beta
+  //real beta_mu;            // prior mu for beta
+  //real beta_sd;            // prior sd for beta
   real sigma_shape;        // prior shape for sigma
   real sigma_scale;        // prior scale for sigma
   int<lower=0> Z;          // smoothing window size
@@ -17,16 +17,35 @@ data {
 }
 
 parameters {
+  // set up for non-centered parameterization of BETA
+  matrix[NW,J] beta_mu;              // time-state specific beta
+  matrix<lower=0.01> [NW,J] beta_sd; // time-state specific beta
+  matrix[NW,J] beta_raw;              // time-state specific beta
+  //
   vector<lower=0.01>[J] xsigma; // state-specific st-dev
-  matrix[NW,J] xbeta;            // time-state specific beta
-  matrix[NW,J] logR;             // time-state specific R values, in Log space
+  //
+  matrix[NW,J] logR_raw;             // time-state specific R values, in Log space
 }
 
 transformed parameters {
+  matrix[NW,J] xbeta;      // time-state specific beta
+  matrix[NW,J] logR;       // time-state specific R values, in Log space
   matrix[N,J] M;           // expected value of cases
   matrix[N,J] R;           // time and state specific R values, expressed normally
   matrix[J, J] RR;         // Diag R matrix
-
+  
+  //
+  for(j in 1:J) {
+    for(w_i in 1:NW) {
+      
+      xbeta[w_i, j] = beta_mu[w_i, j] + beta_sd[w_i, j]  * beta_raw[w_i, j];
+      
+      logR[w_i, j] = xbeta[w_i, j]  + xsigma[j]  * logR_raw[w_i, j];
+      
+    }
+  }
+  
+  
   // get R in exp() space
   for(j in 1:J) {
     for(n in 1:N) {
@@ -58,14 +77,14 @@ transformed parameters {
       MM[, tt] = to_vector(M[n - tt, ]);
     }
 
-    // Create WW vector
-    matrix[tau_end, 1] WW;
-    WW[1:tau_end, 1] = to_vector(W[1:tau_end]);
+    // Create w_i vector
+    matrix[tau_end, 1] w_i;
+    w_i[1:tau_end, 1] = to_vector(W[1:tau_end]);
 
     // Calculate result
     int start_P = J*(n - 1) + 1;
     int end_P   = J*(n - 1) + J;
-    M[n, ] = to_row_vector(P[start_P:end_P, ]' * RR * MM * WW);
+    M[n, ] = to_row_vector(P[start_P:end_P, ]' * RR * MM * w_i);
     
   }
 
@@ -77,17 +96,13 @@ model {
   // ------ EQUATION (11a) -------
   // priors and sample 
   xsigma ~ inv_gamma(sigma_shape, sigma_scale); 
-
+  
   for(j in 1:J) {
-      
-      // weak prior on beta 
-      xbeta[, j] ~ normal(beta_mu, beta_sd); 
-      
-      // sample logR
-      for(ww in 1:NW) {
-        logR[ww, j] ~ normal(xbeta[ww, j], xsigma[j]);
-      }
-      
+      //  non-centered parms
+       beta_mu[, j] ~ std_normal();
+       beta_sd[, j] ~ std_normal(); // this should be something else
+       beta_raw[, j] ~ std_normal();
+       logR_raw[, j] ~ std_normal();
   }
   
   // ------ EQUATION (11c) -------
