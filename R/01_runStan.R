@@ -12,14 +12,9 @@ rstan_options(auto_write = TRUE)
 
 # -------------------------------------------------------------
 #### INPUT
-window_length <- 1  ## smoothing window for estimaiton
 si_shape <- 2       ## shape parameter for serial interval assuming gamma distribution
 si_rate  <- 0.5     ## rate parameter for serial interval assuming gamma distribution
 si_t_max <- 14      ## maximum number of days with non-zero probability for serial interval
-beta_mu  <- 0.      ## prior mean for Rj(t) ~ N
-beta_sd  <- 1.      ## prior sd   for Rj(t) ~ N
-sigma_shape <- 2.   ## prior for sigma_j assuming inverse gamma
-sigma_scale <- 1.   ## prior for sigma_j assuming inverse gamma
 
 source('00_generate_data.R')
 
@@ -49,13 +44,7 @@ stan_data <- list(
   P = P,
   S = S,
   W = w,
-  #beta_mu = beta_mu,
-  #beta_sd = beta_sd,
-  sigma_shape = sigma_shape, 
-  sigma_scale = sigma_scale,
-  Z = as.integer(window_length),
-  init_cases = c(10, 10, 10),
-  fixed_sigma = c(0.1, 0.1, 0.1)
+  init_cases = c(10, 10, 10)
 )
 
 # -------------------------------------------------------------
@@ -63,6 +52,7 @@ stan_data <- list(
 N_ITER = 4000
 N_WARMUP = 2000
 N_CHAINS = 4
+
 m_hier <- stan(file="../src/stan_sliding_v4nc1.stan",
                data = stan_data, 
                chains = N_CHAINS,
