@@ -13,7 +13,7 @@ data {
 parameters {
   // set up for non-centered parameterization of BETA
   matrix[NW,J] beta_mu;               // time-region specific beta mu
-  matrix[NW,J] beta_sd;               // time-region specific beta sd
+  matrix<lower=0.01>[NW,J] beta_sd;   // time-region specific beta sd
   matrix[NW,J] beta_raw;              // time-region specific beta raw
   //
   vector<lower=0.01>[J] xsigma;       // region-specific st-dev
@@ -92,12 +92,12 @@ model {
    
   // ------ EQUATION (11a - modified to be weekly) -------
   // priors and sample 
-  xsigma ~ inv_gamma(2, 1);  // has to be > 0
+  xsigma ~ std_normal();  // has to be > 0
   
   for(j in 1:J) {
       //  non-centered parms
        beta_mu[, j] ~ std_normal();
-       beta_sd[, j] ~ inv_gamma(2, 1); // has to be > 0
+       beta_sd[, j] ~ std_normal(); // has to be > 0
        beta_raw[, j] ~ std_normal();
        logR_raw[, j] ~ std_normal();
   }
