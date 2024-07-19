@@ -7,7 +7,7 @@ library(lemon)
 library(shinystan)
 source("00_generate_data.R")
 
-m_hier <- readRDS("stan_out_weekly.RDS")
+#m_hier <- readRDS("stan_out_weekly.RDS")
 
 rstan::check_divergences(m_hier)
 rstan::check_hmc_diagnostics(m_hier)
@@ -20,8 +20,6 @@ out <- rstan::extract(m_hier)
 # get actual data
 dim(out$M)
 dim(out$xsigma)
-N_CHAINS = 4
-N_ITER = 4000
 
 ## CHANCGE THIS TO BE BY CHAIN
 data_l <- lapply(1:J, function(i) {
@@ -94,7 +92,7 @@ p2 <- ggplot(data_all_summarise, aes(x = x, color = region)) +
   geom_ribbon(aes(x = x,ymin=Rtl,ymax=Rth, fill = region), alpha=0.3) + 
   geom_line(aes(y=Rt_mean,x=x, color = region),linewidth = 0.5)+ 
   geom_line(aes(y=Rt_real,x=x), color = 'black', linewidth = 0.5, linetype = '41')+
-  geom_line(aes(y=Rt_back,x=x), color = 'black', linewidth = 0.5, linetype = '11')+
+  #geom_line(aes(y=Rt_back,x=x), color = 'black', linewidth = 0.5, linetype = '11')+
   geom_hline(yintercept = 1,color = "black", linewidth = 0.25,alpha=0.5)  +
   theme_classic() +  xlab("Days") + ylab('Reproduction Number') +
   facet_rep_wrap(~region, nrow = 3) + 
@@ -105,40 +103,40 @@ library(patchwork)
 p1 + theme(legend.position = 'none') + p2 + patchwork::plot_layout(nrow = 1)
 
 #############################################################################
-library(splines)
-
-spline_df = vector("list", 3)
-for(this_i in 1:3) {
-y <- R_this[, this_i]
-
-x <- 1:length(y)
-N_KNOTS = 4 ## inversely proportional to the length of y
-k <- quantile(x, probs = seq(from = 0.01, to = 0.99, length.out  = N_KNOTS))
-
-b1 <- lm(y ~ ns(x, knots = k))
-x.pred <- predict(b1, se = T)
-
-head(x.pred$se.fit)
-spline_df[[this_i]] <- data.frame(
-  region = paste0('region: ', this_i),
-  x = x,
-  y = x.pred$fit, 
-                        ylb = x.pred$fit - 1.96 * x.pred$se.fit,
-                        yub = x.pred$fit + 1.96 * x.pred$se.fit)
-}
-spline_df <- do.call(rbind, spline_df)
-
-ggplot(data_all_summarise, 
-       aes(x = x, color = region)) +
-  geom_ribbon(aes(x = x,ymin=Rtl,ymax=Rth, fill = region), alpha=0.3) + 
-  geom_line(aes(y=Rt_mean,x=x, color = region),linewidth = 0.5)+ 
-  geom_line(data = spline_df, aes(x = x, y = y, color= region),
-            linewidth = 2.5) +
-  #geom_line(aes(y=Rt_real,x=x), color = 'black', linewidth = 0.5, linetype = '41')+
-  geom_line(aes(y=Rt_back,x=x), color = 'black', linewidth = 0.5, linetype = '11')+
-  geom_hline(yintercept = 1,color = "black", linewidth = 0.25,alpha=0.5)  +
-  theme_classic() +  xlab("Days") + ylab('Reproduction Number') +
-  facet_rep_wrap(~region, nrow = 3) + 
-  coord_cartesian(ylim = c(0, 5)) +
-  theme(strip.background = element_blank())
+# library(splines)
+# 
+# spline_df = vector("list", 3)
+# for(this_i in 1:3) {
+# y <- R_this[, this_i]
+# 
+# x <- 1:length(y)
+# N_KNOTS = 4 ## inversely proportional to the length of y
+# k <- quantile(x, probs = seq(from = 0.01, to = 0.99, length.out  = N_KNOTS))
+# 
+# b1 <- lm(y ~ ns(x, knots = k))
+# x.pred <- predict(b1, se = T)
+# 
+# head(x.pred$se.fit)
+# spline_df[[this_i]] <- data.frame(
+#   region = paste0('region: ', this_i),
+#   x = x,
+#   y = x.pred$fit, 
+#                         ylb = x.pred$fit - 1.96 * x.pred$se.fit,
+#                         yub = x.pred$fit + 1.96 * x.pred$se.fit)
+# }
+# spline_df <- do.call(rbind, spline_df)
+# 
+# ggplot(data_all_summarise, 
+#        aes(x = x, color = region)) +
+#   geom_ribbon(aes(x = x,ymin=Rtl,ymax=Rth, fill = region), alpha=0.3) + 
+#   geom_line(aes(y=Rt_mean,x=x, color = region),linewidth = 0.5)+ 
+#   geom_line(data = spline_df, aes(x = x, y = y, color= region),
+#             linewidth = 2.5) +
+#   #geom_line(aes(y=Rt_real,x=x), color = 'black', linewidth = 0.5, linetype = '41')+
+#   geom_line(aes(y=Rt_back,x=x), color = 'black', linewidth = 0.5, linetype = '11')+
+#   geom_hline(yintercept = 1,color = "black", linewidth = 0.25,alpha=0.5)  +
+#   theme_classic() +  xlab("Days") + ylab('Reproduction Number') +
+#   facet_rep_wrap(~region, nrow = 3) + 
+#   coord_cartesian(ylim = c(0, 5)) +
+#   theme(strip.background = element_blank())
 

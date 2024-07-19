@@ -53,11 +53,18 @@ N_ITER = 4000
 N_WARMUP = 2000
 N_CHAINS = 4
 
-m_hier <- stan(file="../src/stan_sliding_v4nc1.stan",
+# compile first
+model1 <- stan_model(file="../src/stan_sliding_v4nc1.stan",
+                     model_name = "spatialRt")
+
+# then run
+m_hier <- sampling(object = model1,
                data = stan_data, 
                chains = N_CHAINS,
                warmup = N_WARMUP,
-               iter = N_ITER + N_WARMUP)
+               iter = N_ITER + N_WARMUP,
+               control = list(max_treedepth = 20,
+                              adapt_delta = 0.99))
 
 # extract output
 # saveRDS(m_hier, 'stan_out_weekly_nc.RDS')
