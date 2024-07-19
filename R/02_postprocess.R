@@ -5,8 +5,12 @@ library(tidyverse)
 library(matrixStats)
 library(lemon)
 library(shinystan)
-source("R/00_generate_data.R")
+source("00_generate_data.R")
+
 m_hier <- readRDS("stan_out_weekly.RDS")
+
+rstan::check_divergences(m_hier)
+rstan::check_hmc_diagnostics(m_hier)
 
 out <- rstan::extract(m_hier)
 # QC
@@ -90,7 +94,7 @@ p2 <- ggplot(data_all_summarise, aes(x = x, color = region)) +
   geom_ribbon(aes(x = x,ymin=Rtl,ymax=Rth, fill = region), alpha=0.3) + 
   geom_line(aes(y=Rt_mean,x=x, color = region),linewidth = 0.5)+ 
   geom_line(aes(y=Rt_real,x=x), color = 'black', linewidth = 0.5, linetype = '41')+
-  #geom_line(aes(y=Rt_back,x=x), color = 'black', linewidth = 0.5, linetype = '11')+
+  geom_line(aes(y=Rt_back,x=x), color = 'black', linewidth = 0.5, linetype = '11')+
   geom_hline(yintercept = 1,color = "black", linewidth = 0.25,alpha=0.5)  +
   theme_classic() +  xlab("Days") + ylab('Reproduction Number') +
   facet_rep_wrap(~region, nrow = 3) + 

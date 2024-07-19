@@ -60,7 +60,7 @@ m_hier <- stan(file="../src/stan_sliding_v4nc1.stan",
                iter = N_ITER + N_WARMUP)
 
 # extract output
-# saveRDS(m_hier, 'stan_out_weekly.RDS')
+# saveRDS(m_hier, 'stan_out_weekly_nc.RDS')
 # 
 # shinystan::launch_shinystan(m_hier)
 

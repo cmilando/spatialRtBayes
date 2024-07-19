@@ -11,37 +11,43 @@ data {
 }
 
 parameters {
-  // set up for non-centered parameterization of BETA
-  matrix[NW,J] beta_mu;               // time-region specific beta mu
-  matrix<lower=0.01>[NW,J] beta_sd;   // time-region specific beta sd
-  matrix[NW,J] beta_raw;              // time-region specific beta raw
-  //
-  vector<lower=0.01>[J] xsigma;       // region-specific st-dev
-  //
-  matrix[NW,J] logR_raw;              // time-region specific R values, in Log space
+  
+  // CENTRAL RT
+  real<lower=0.00> sigma_logRt_central;  // how do we scale it
+  vector[NW] logRt_central_error;       // draws from the st normal
+  real logRt_central_intercept;
+
+  // DEVIATION
+  vector<lower=0.00>[J] sigma_logRt;    // central, could be region specific
+  matrix[NW, J] logRt_error; // for reach region, whats the avg deviation
+  
 }
 
 transformed parameters {
-  matrix[NW,J] xbeta;      // time-region specific beta
-  matrix[NW,J] logR;       // time-region specific R values, in Log space
-  matrix[N,J] M;           // expected value of cases
+  //
+  vector[NW] logR_central; 
+  matrix[NW, J] logR; 
+  
+  //
   matrix[N,J] R;           // time and region specific R values, expressed normally
+  //
+  matrix[N,J] M;           // expected value of cases
   matrix[J, J] RR;         // Diag R matrix
   
   // ------ CALCULATE R(t) -------------
-  for(j in 1:J) {
-    for(w_i in 1:NW) {
-      
-      // xsimga is the region-level sd
-      // xbeta is the time-and-region specific mean of the normal dist of logR
-      
-      xbeta[w_i, j] = beta_mu[w_i, j] + beta_sd[w_i, j]  * beta_raw[w_i, j];
-      
-      logR[w_i, j] = xbeta[w_i, j]  + xsigma[j]  * logR_raw[w_i, j];
-      
-    }
+  
+  // CENTRAL RT -- TIME VARYING
+  logR_central[1] = logRt_central_intercept;
+  for(w_i in 2:NW) {
+    logR_central[w_i] = logR_central[w_i-1] + sigma_logRt_central * logRt_central_error[w_i];
   }
   
+  // DEVIATION -- SPACE VARYING
+  for(j in 1:J) {
+    for(w_i in 1:NW) {
+      logR[w_i, j] = logR_central[w_i] + sigma_logRt[j] * logRt_error[w_i, j];
+    }
+  }
   
   // get R in exp() space
   for(j in 1:J) {
@@ -89,18 +95,14 @@ transformed parameters {
 
 model {
    
-   
   // ------ EQUATION (11a - modified to be weekly) -------
-  // priors and sample 
-  xsigma ~ std_normal();  // has to be > 0
-  
-  for(j in 1:J) {
-      //  non-centered parms
-       beta_mu[, j] ~ std_normal();
-       beta_sd[, j] ~ std_normal(); // has to be > 0
-       beta_raw[, j] ~ std_normal();
-       logR_raw[, j] ~ std_normal();
-  }
+  // Central R(t)
+  sigma_logRt_central ~ normal(0, 0.1);   // week to week variation in Rt
+  logRt_central_error ~ std_normal();     // non-centered parameterization
+  logRt_central_intercept ~ normal(1, 1); // starting point
+
+  sigma_logRt ~ normal(0, 0.1);   // week to week variation in Rt
+  to_vector(logRt_error) ~ std_normal();     // non-centered parameterization
   
   // ------ EQUATION (11c) -------
   for(j in 1:J) {
